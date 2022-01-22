@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using System.Text;
 using System.Linq;
+using PasswordMenager.Middleware;
 
 namespace PasswordMenager.Controllers
 {
@@ -17,12 +18,17 @@ namespace PasswordMenager.Controllers
         {
             _db = db;
         }
-        public IActionResult Index()
+        [RateLimitDecorator(StrategyType = StrategyTypeEnum.IpAddress)]
+        public async Task<IActionResult> Index()
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             List<ClientPasswordIndexVM> result;
             using (SHA256 sha256Hash = SHA256.Create())
             {
-                var passwordsList = _db.clientPasswords.ToList();
+                var passwordsList = _db.clientPasswords.Where(x => x.UserName.Contains(User.Identity.Name)).ToList();
 
                 result = passwordsList.Select(x => new ClientPasswordIndexVM() { 
                     Id = x.Id,
@@ -31,23 +37,36 @@ namespace PasswordMenager.Controllers
             }
             return View(result);
         }
-        public IActionResult Delete(int id)
+        [RateLimitDecorator(StrategyType = StrategyTypeEnum.IpAddress)]
+        public async Task<IActionResult> Delete(int id)
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             _db.Remove(_db.clientPasswords.FirstOrDefault(x => x.Id == id));
             _db.SaveChanges();
-            return Ok();
+            return RedirectToAction("Index");
         }
 
         // z automatu get
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             return View();
         }
         [HttpPost]
         // choni przed cross forgery
         [ValidateAntiForgeryToken]
-        public IActionResult Create(ClientPasswordVM obj)
+        public async Task<IActionResult> Create(ClientPasswordVM obj)
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
 
             string pass = obj.Password;
             byte[] encrypted;
@@ -74,7 +93,7 @@ namespace PasswordMenager.Controllers
             _db.Add(cp);
             _db.SaveChanges();
 
-            return View();
+            return RedirectToAction("Index");
         }
 
         public byte[] encrypt(string plainText,byte[] Key, byte[] IV)

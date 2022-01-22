@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PasswordMenager.Data;
+using PasswordMenager.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,9 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+
+
+builder.Services.AddSession();
 
 var app = builder.Build();
 
@@ -28,10 +32,16 @@ else
     app.UseHsts();
 }
 
+app.UseSession();
+
+
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseMiddleware<RateLimitMiddlware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

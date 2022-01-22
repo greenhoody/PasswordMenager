@@ -11,7 +11,7 @@ namespace PasswordMenager.Models
 
         [Required]
         public byte[] Password { get; set; }
-        [Required]
+        [Required, Url]
         public string URI { get; set; }
         public DateTime Created { get; set; } = DateTime.Now;
     }

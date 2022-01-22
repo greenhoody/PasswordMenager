@@ -12,5 +12,6 @@ namespace PasswordMenager.Data
             : base(options)
         {
         }
+        public DbSet<PasswordMenager.Models.VModels.ClientPasswordVM> ClientPasswordVM { get; set; }
     }
 }
