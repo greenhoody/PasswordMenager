@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Identity;
 using System.Text;
 using System.Linq;
 using PasswordMenager.Middleware;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace PasswordMenager.Controllers
 {
@@ -18,8 +20,10 @@ namespace PasswordMenager.Controllers
         {
             _db = db;
         }
+
+        [Authorize]
         [RateLimitDecorator(StrategyType = StrategyTypeEnum.IpAddress)]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             if (!User.Identity.IsAuthenticated)
             {
@@ -37,8 +41,9 @@ namespace PasswordMenager.Controllers
             }
             return View(result);
         }
+        [Authorize]
         [RateLimitDecorator(StrategyType = StrategyTypeEnum.IpAddress)]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             if (!User.Identity.IsAuthenticated)
             {
@@ -50,7 +55,7 @@ namespace PasswordMenager.Controllers
         }
 
         // z automatu get
-        public async Task<IActionResult> Create()
+        public IActionResult Create()
         {
             if (!User.Identity.IsAuthenticated)
             {
@@ -58,10 +63,12 @@ namespace PasswordMenager.Controllers
             }
             return View();
         }
+
+        [Authorize]
         [HttpPost]
         // choni przed cross forgery
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ClientPasswordVM obj)
+        public IActionResult Create(ClientPasswordVM obj)
         {
             if (!User.Identity.IsAuthenticated)
             {

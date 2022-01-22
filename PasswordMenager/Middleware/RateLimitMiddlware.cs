@@ -1,12 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using System;
+﻿using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Session;
+
 
 namespace PasswordMenager.Middleware
 {
@@ -21,7 +16,6 @@ namespace PasswordMenager.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            ISession session = context.Session;
             var endpoint = context.GetEndpoint();
             var controllerActionDescriptor = endpoint?.Metadata.GetMetadata<ControllerActionDescriptor>();
 
@@ -47,7 +41,7 @@ namespace PasswordMenager.Middleware
             if (previousApiCall != null)
             {
 
-                if (DateTime.Now < previousApiCall.Value.AddSeconds(5))
+                if (DateTime.Now < previousApiCall.Value.AddSeconds(1))
                 {
                     context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
                     return;
@@ -59,10 +53,6 @@ namespace PasswordMenager.Middleware
             await _next(context);
         }
 
-        /// <summary>
-        /// We store the time that a client made a call to the current API
-        /// </summary>
-        /// <param name="key"></param>
         private void UpdateApiCallFor(string key)
         {
             ApiCallsInMemory.TryRemove(key, out _);
@@ -75,12 +65,6 @@ namespace PasswordMenager.Middleware
             return value;
         }
 
-        /// <summary>
-        /// Makes key based on the specified strategy for the current API
-        /// </summary>
-        /// <param name="apiDecorator"></param>
-        /// <param name="context"></param>
-        /// <returns></returns>
         private static string GetCurrentClientKey(RateLimitDecorator apiDecorator, HttpContext context)
         {
             var keys = new List<string>
@@ -91,20 +75,12 @@ namespace PasswordMenager.Middleware
             if (apiDecorator.StrategyType == StrategyTypeEnum.IpAddress)
                 keys.Add(GetClientIpAddress(context));
 
-            // TODO: Implement other strategies.
 
             return string.Join('_', keys);
         }
 
-        /// <summary>
-        /// Returns the client's Ip Address
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
         private static string GetClientIpAddress(HttpContext context)
         {
-            // Check this out
-            // https://stackoverflow.com/questions/28664686/how-do-i-get-client-ip-address-in-asp-net-core
             return context.Connection.RemoteIpAddress.ToString();
         }
     }

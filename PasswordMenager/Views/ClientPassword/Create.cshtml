@@ -1,5 +1,4 @@
-﻿@model PasswordMenager.Models.VModels.ClientPasswordVM
-
+﻿@model PasswordMenager.Models.VModels.ClientPasswordVM;
 @{
     ViewData["Title"] = "Create";
 }
@@ -35,4 +34,8 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+@using (Html.BeginForm("Create", "ClientPassword")) {
+    @Html.AntiForgeryToken()
 }
